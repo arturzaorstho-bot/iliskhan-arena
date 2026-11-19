@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111111">
   <title>ILISKhan ARENA</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script async src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root{color-scheme:dark;--bg:#101010;--panel:#1b1b1b;--line:#333;--orange:#ff762b;--muted:#aaa}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#fff;font:15px system-ui,Arial,sans-serif}
@@ -83,12 +83,12 @@
     <div class="progress"><span id="xpBar" style="width:20%"></span></div>
   </section>
   <nav class="nav">
-    <button class="active" data-page="home" onclick="window.openArenaPage(\'home\')">⌂<br>Главная</button>
-    <button data-page="tasks" onclick="window.openArenaPage(\'tasks\')">⚡<br>Задания</button>
-    <button data-page="fighter" onclick="window.openArenaPage(\'fighter\')">🪖<br>Боец</button>
-    <button data-page="farms" onclick="window.openArenaPage(\'farms\')">🏭<br>Фермы</button>
-    <button data-page="rating" onclick="window.openArenaPage(\'rating\')">🏆<br>Рейтинг</button>
-    <button data-page="profile" onclick="window.openArenaPage(\'profile\')">👤<br>Профиль</button>
+    <button class="active" data-page="home">⌂<br>Главная</button>
+    <button data-page="tasks">⚡<br>Задания</button>
+    <button data-page="fighter">🪖<br>Боец</button>
+    <button data-page="farms">🏭<br>Фермы</button>
+    <button data-page="rating">🏆<br>Рейтинг</button>
+    <button data-page="profile">👤<br>Профиль</button>
   </nav>
   <main>
     <section class="page active" id="home">
@@ -173,18 +173,18 @@
     </section>
   </main>
   <div id="notice" aria-live="polite"></div>
+  <div id="runtimeError" style="display:none;margin-top:10px;padding:10px;border:1px solid #a33;border-radius:8px;color:#ffb0a0;font-size:12px"></div>
   <div class="footer">ILISKhan ARENA · LOCAL SAVE VERSION</div>
 </div>
 <script>
-// Fallback navigation for Telegram WebView: direct inline handler.
-window.openArenaPage = function(id) {
-  document.querySelectorAll('.page').forEach(function(page) {
-    page.classList.toggle('active', page.id === id);
-  });
-  document.querySelectorAll('[data-page]').forEach(function(button) {
-    button.classList.toggle('active', button.dataset.page === id);
-  });
-};
+window.addEventListener("error", function(event) {
+  const box = document.getElementById("runtimeError");
+  if (box) { box.style.display = "block"; box.textContent = "Ошибка запуска: " + (event.message || "неизвестная ошибка"); }
+});
+window.addEventListener("unhandledrejection", function(event) {
+  const box = document.getElementById("runtimeError");
+  if (box) { box.style.display = "block"; box.textContent = "Ошибка приложения: " + String(event.reason || "неизвестная ошибка"); }
+});
 (() => {
   const tg = window.Telegram?.WebApp;
   if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#101010'); tg.setBackgroundColor('#101010'); }
@@ -215,4 +215,4 @@ window.openArenaPage = function(id) {
         incomeLevel: Number.isFinite(saved.incomeLevel) ? Math.max(0, Math.floor(saved.incomeLevel)) : 0,
         passiveAt: Number.isFinite(saved.passiveAt) ? saved.passiveAt : Date.now(),
         pendingIncome: Number.isFinite(saved.pendingIncome) ? Math.max(0, Math.floor(saved.pendingIncome)) : 0,
-        farms: Array.isArray(saved.farms) ? Array.from({length:5}, (_,i) => Numb
+        farms: Array.isArray(saved.farms) ? Array.from({length:
