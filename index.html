@@ -18,7 +18,7 @@
     .hero{padding:20px;border:1px solid #70351c;border-radius:16px;background:radial-gradient(ellipse at 85% 5%,#71300e 0,transparent 48%),linear-gradient(135deg,#28140d,#111 68%);overflow:hidden}
     .eyebrow{font-size:11px;color:#bbb;letter-spacing:1px}.username{font-size:25px;font-weight:950;margin:5px 0}.level{font-size:11px;color:#ff9b62;font-weight:800}
     .stats{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}.stat{background:#0006;padding:12px;border-radius:10px}.stat small{display:block;color:#aaa;font-size:10px}.stat b{font-size:20px}
-    .nav{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;background:#1b1b1b;padding:6px;border-radius:12px;margin:14px 0}
+    .nav{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;background:#1b1b1b;padding:6px;border-radius:12px;margin:14px 0}
     .nav button{padding:10px 2px;border-radius:8px;background:transparent;color:#aaa;font-size:11px}.nav button.active{background:#492515;color:#ff9a5d}
     .page{display:none}.page.active{display:block}.heading{font-weight:900;letter-spacing:.5px;margin:14px 0 10px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.tile,.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px}
@@ -62,6 +62,10 @@
     .collect-amount{font-size:27px;font-weight:950;color:#ff9a50;margin:5px 0 10px}
     .collect-btn{width:100%;padding:13px;border-radius:9px;background:linear-gradient(100deg,#ff762b,#d94312);font-weight:950;letter-spacing:.4px}
     .collect-btn:disabled{background:#383838;color:#888}
+    .gear-card{background:linear-gradient(145deg,#26201c,#171717);border:1px solid #58321f;border-radius:12px;padding:13px;margin:9px 0}
+    .gear-icon{font-size:34px}.gear-stats{display:flex;gap:12px;color:#ffad7a;font-size:12px;margin:8px 0}.gear-card button{padding:9px 12px;border-radius:8px;background:linear-gradient(100deg,#ff762b,#d94312);font-weight:900;font-size:11px}.gear-card button:disabled{background:#383838;color:#aaa}
+    .fighter-profile{display:grid;grid-template-columns:90px 1fr;gap:12px;align-items:center;padding:14px;background:linear-gradient(130deg,#32180d,#191919);border:1px solid #603018;border-radius:13px}
+    .fighter-avatar{font-size:62px;text-align:center}
   </style>
 </head>
 <body>
@@ -81,6 +85,7 @@
   <nav class="nav">
     <button class="active" data-page="home">⌂<br>Главная</button>
     <button data-page="tasks">⚡<br>Задания</button>
+    <button data-page="fighter">🪖<br>Боец</button>
     <button data-page="farms">🏭<br>Фермы</button>
     <button data-page="rating">🏆<br>Рейтинг</button>
     <button data-page="profile">👤<br>Профиль</button>
@@ -131,6 +136,14 @@
       <div class="collect-card"><small class="muted">ТВОЙ НАКОПЛЕННЫЙ ДОХОД</small><div class="collect-amount">🪙 <span id="pendingIncome">0</span></div><button class="collect-btn" id="collectIncome" disabled>💰 ЗАБРАТЬ ДОХОД</button><p class="muted">Нажми, чтобы перевести накопленные монеты на баланс.</p></div>
       <div id="farmList"></div>
     </section>
+    <section class="page" id="fighter">
+      <div class="heading">🪖 МОЙ БОЕЦ</div>
+      <div class="fighter-profile"><div class="fighter-avatar" id="fighterAvatar">🪖</div><div><b id="fighterTitle">Новичок арены</b><p class="muted">Твоя экипировка влияет на силу в будущих сражениях.</p><div class="tag" id="fighterLevelTag">УРОВЕНЬ 1</div></div></div>
+      <div class="grid" style="margin-top:10px"><div class="card">⚔️ Урон<br><b id="fighterDamage" class="orange">5</b></div><div class="card">🛡️ Защита<br><b id="fighterDefense" class="orange">0</b></div></div>
+      <div class="heading">🔫 ОРУЖИЕ</div><div id="weaponList"></div>
+      <div class="heading">🦺 БРОНЯ</div><div id="armorList"></div>
+      <p class="muted">Покупай экипировку за игровые монеты. Купленные предметы остаются в инвентаре, а экипировать можно только приобретённые.</p>
+    </section>
     <section class="page" id="rating"><div class="heading">🏆 РЕЙТИНГ ИГРОКОВ</div><p class="muted">Пока показаны тестовые данные. Общий рейтинг появится после подключения сервера.</p>
       <div class="card row"><b>🥇 1. FIRE KING</b><b class="orange">2450 XP</b></div>
       <div class="card row"><b>🥈 2. SHADOW</b><b>2100 XP</b></div>
@@ -177,7 +190,7 @@
     const d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   };
-  const defaultState = {coins:250, xp:20, lastBonus:'', purchases:[], energy:1000, energyAt:Date.now(), tapLevel:1, incomeLevel:0, passiveAt:Date.now(), pendingIncome:0, farms:[0,0,0,0,0]};
+  const defaultState = {coins:250, xp:20, lastBonus:'', purchases:[], energy:1000, energyAt:Date.now(), tapLevel:1, incomeLevel:0, passiveAt:Date.now(), pendingIncome:0, farms:[0,0,0,0,0], ownedWeapons:['training'], equippedWeapon:'training', ownedArmor:['cloth'], equippedArmor:'cloth'};
   let state = defaultState;
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
@@ -193,225 +206,8 @@
         incomeLevel: Number.isFinite(saved.incomeLevel) ? Math.max(0, Math.floor(saved.incomeLevel)) : 0,
         passiveAt: Number.isFinite(saved.passiveAt) ? saved.passiveAt : Date.now(),
         pendingIncome: Number.isFinite(saved.pendingIncome) ? Math.max(0, Math.floor(saved.pendingIncome)) : 0,
-        farms: Array.isArray(saved.farms) ? Array.from({length:5}, (_,i) => Number.isFinite(saved.farms[i]) ? Math.max(0,Math.floor(saved.farms[i])) : 0) : [0,0,0,0,0]
-      };
-    }
-  } catch (err) {
-    console.warn('Не удалось прочитать сохранение', err);
-  }
-
-  const notice = msg => document.getElementById('notice').textContent = msg;
-  function save() {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(state));
-    } catch (err) {
-      notice('Не удалось сохранить данные на этом устройстве.');
-    }
-  }
-  function level() { return Math.floor(state.xp / 100) + 1; }
-  const TAP_COST = level => Math.floor(100 * Math.pow(1.7, level - 1));
-  const INCOME_COST = level => Math.floor(250 * Math.pow(1.85, level));
-  const tapPower = () => state.tapLevel;
-  const farmDefs = [
-    {name:'Обычная ферма',icon:'🌾',income:60,cost:500,desc:'Начни получать стабильный доход.'},
-    {name:'Военная ферма',icon:'🪖',income:150,cost:2000,desc:'Военная база приносит больше монет.'},
-    {name:'Ферма Free Fire',icon:'🔥',income:300,cost:7000,desc:'Мощная ферма для опытных игроков.'},
-    {name:'Золотая ферма',icon:'🪙',income:600,cost:20000,desc:'Золотой источник большого дохода.'},
-    {name:'Легендарная ферма',icon:'👑',income:1200,cost:60000,desc:'Самая прибыльная ферма арены.'}
-  ];
-  const farmCost = (i) => Math.floor(farmDefs[i].cost * Math.pow(1.8, state.farms[i]));
-  const farmsIncome = () => state.farms.reduce((sum,lvl,i) => sum + lvl * farmDefs[i].income, 0);
-  const passivePerHour = () => state.incomeLevel * 60 + farmsIncome();
-  function renderFarms() {
-    const list = document.getElementById('farmList');
-    if (!list) return;
-    list.innerHTML = farmDefs.map((f,i) => {
-      const lvl = state.farms[i], cost = farmCost(i);
-      return `<div class="farm-card"><div class="row"><span class="farm-icon">${f.icon}</span><span class="tag">УРОВЕНЬ ${lvl}</span></div><div class="farm-title">${f.name}</div><p class="muted">${f.desc}</p><div class="farm-stats"><span>Доход: +${f.income * lvl}/час</span><span>Следующий: +${f.income}/час</span></div><button data-farm="${i}" ${state.coins < cost ? 'disabled' : ''}>${lvl ? 'УЛУЧШИТЬ' : 'КУПИТЬ'} · ${cost.toLocaleString('ru-RU')} 🪙</button></div>`;
-    }).join('');
-    document.getElementById('farmIncome').textContent = farmsIncome().toLocaleString('ru-RU');
-    document.getElementById('farmLevels').textContent = state.farms.reduce((a,b)=>a+b,0);
-  }
-  function updateEconomy() {
-    const now = Date.now();
-    const elapsedEnergy = Math.max(0, now - (state.energyAt || now));
-    const restoredEnergy = Math.floor(elapsedEnergy / 5000);
-    state.energy = Math.min(1000, state.energy + restoredEnergy);
-    state.energyAt = (state.energyAt || now) + restoredEnergy * 5000;
-    const elapsedPassive = Math.max(0, Math.min(now - (state.passiveAt || now), 24 * 60 * 60 * 1000));
-    if (passivePerHour() > 0) {
-      const earned = Math.floor(elapsedPassive / 3600000 * passivePerHour());
-      if (earned > 0) {
-        state.pendingIncome = (state.pendingIncome || 0) + earned;
-        state.passiveAt += Math.floor(earned / passivePerHour() * 3600000);
-      }
-    } else { state.passiveAt = now; }
-  }
-  function render() {
-    document.getElementById('coins').textContent = state.coins;
-    document.getElementById('homeCoins').textContent = state.coins;
-    document.getElementById('profileCoins').textContent = state.coins;
-    document.getElementById('profileXP').textContent = state.xp + ' XP';
-    document.getElementById('ratingXP').textContent = state.xp + ' XP';
-    document.getElementById('purchaseCount').textContent = state.purchases.length;
-    document.getElementById('levelValue').textContent = 'LVL ' + String(level()).padStart(2,'0');
-    document.getElementById('levelLabel').textContent = '★ БОЕЦ · УРОВЕНЬ ' + level();
-    document.getElementById('profileLevel').textContent = 'УРОВЕНЬ ' + level();
-    const xpInLevel = state.xp % 100;
-    document.getElementById('xpText').textContent = xpInLevel + ' / 100 XP';
-    document.getElementById('xpBar').style.width = xpInLevel + '%';
-    const claimedToday = state.lastBonus === today();
-    document.getElementById('claim').disabled = claimedToday;
-    document.getElementById('claim').textContent = claimedToday ? 'БОНУС УЖЕ ПОЛУЧЕН' : 'ПОЛУЧИТЬ НАГРАДУ';
-    document.getElementById('bonusStatus').textContent = claimedToday
-      ? 'Сегодня ты уже забрал бонус. Возвращайся завтра!'
-      : 'Награда доступна. Забирай +50 монет один раз в день.';
-    document.getElementById('energyValue').textContent = state.energy;
-    document.getElementById('energyBar').style.width = (state.energy / 1000 * 100) + '%';
-    document.getElementById('tapPowerLabel').textContent = tapPower();
-    document.getElementById('tapLevel').textContent = state.tapLevel;
-    document.getElementById('incomeLevel').textContent = state.incomeLevel;
-    document.getElementById('incomeRate').textContent = passivePerHour();
-    document.getElementById('passiveRate').textContent = passivePerHour();
-    document.getElementById('offlineEarned').textContent = (state.pendingIncome || 0).toLocaleString('ru-RU');
-    document.getElementById('pendingIncome').textContent = (state.pendingIncome || 0).toLocaleString('ru-RU');
-    document.getElementById('collectIncome').disabled = !(state.pendingIncome > 0);
-    renderFarms();
-    const tapCost = TAP_COST(state.tapLevel);
-    const incomeCost = INCOME_COST(state.incomeLevel);
-    const tapBtn = document.getElementById('upgradeTap');
-    const incomeBtn = document.getElementById('upgradeIncome');
-    tapBtn.textContent = 'УЛУЧШИТЬ · ' + tapCost + ' 🪙';
-    incomeBtn.textContent = 'УЛУЧШИТЬ · ' + incomeCost + ' 🪙';
-    tapBtn.disabled = state.coins < tapCost;
-    incomeBtn.disabled = state.coins < incomeCost;
-  }
-  function addCoins(amount) {
-    state.coins += amount;
-    save();
-    render();
-  }
-  function show(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === id));
-    document.querySelectorAll('[data-page]').forEach(b => b.classList.toggle('active', b.dataset.page === id));
-    render();
-  }
-  updateEconomy();
-  save();
-  render();
-  setInterval(() => { updateEconomy(); save(); render(); }, 1000);
-
-  document.addEventListener('click', e => {
-    updateEconomy();
-    const nav = e.target.closest('[data-page]');
-    if (nav) { show(nav.dataset.page); return; }
-    const open = e.target.closest('[data-open]');
-    if (open) { show(open.dataset.open); return; }
-
-    const farmButton = e.target.closest('[data-farm]');
-    if (farmButton) {
-      const i = Number(farmButton.dataset.farm);
-      if (!Number.isInteger(i) || i < 0 || i >= farmDefs.length) return;
-      const cost = farmCost(i);
-      if (state.coins < cost) { notice('Недостаточно монет для покупки фермы.'); return; }
-      state.coins -= cost;
-      state.farms[i] += 1;
-      save(); render();
-      notice('🏭 ' + farmDefs[i].name + ' улучшена! Доход +' + farmDefs[i].income + ' монет/час.');
-      return;
-    }
-
-    if (e.target.closest('#tapButton')) {
-      updateEconomy();
-      if (state.energy < 1) { notice('⚡ Энергия закончилась. Подожди её восстановления.'); render(); return; }
-      state.energy -= 1;
-      state.coins += tapPower();
-      state.xp += 1;
-      save(); render();
-      const stage = document.getElementById('fighterStage');
-      const pop = document.createElement('span');
-      pop.className = 'tap-pop';
-      pop.textContent = '+' + tapPower();
-      pop.style.left = (25 + Math.random() * 50) + '%';
-      pop.style.top = (25 + Math.random() * 40) + '%';
-      stage.appendChild(pop);
-      setTimeout(() => pop.remove(), 700);
-      return;
-    }
-
-    if (e.target.id === 'upgradeTap') {
-      const cost = TAP_COST(state.tapLevel);
-      if (state.coins < cost) { notice('Недостаточно монет для улучшения.'); return; }
-      state.coins -= cost; state.tapLevel += 1; save(); render();
-      notice('👊 Сила нажатия улучшена!');
-      return;
-    }
-
-    if (e.target.id === 'upgradeIncome') {
-      const cost = INCOME_COST(state.incomeLevel);
-      if (state.coins < cost) { notice('Недостаточно монет для автофермы.'); return; }
-      state.coins -= cost; state.incomeLevel += 1; save(); render();
-      notice('🏭 Автоферма улучшена: +' + passivePerHour() + ' монет в час.');
-      return;
-    }
-
-    if (e.target.closest('#collectIncome')) {
-      const amount = Math.max(0, Math.floor(state.pendingIncome || 0));
-      if (amount <= 0) { notice('Пока нечего забирать. Доход ферм накапливается автоматически.'); render(); return; }
-      state.coins += amount;
-      state.pendingIncome = 0;
-      save(); render();
-      notice('💰 Ты забрал ' + amount.toLocaleString('ru-RU') + ' монет!');
-      return;
-    }
-
-    if (e.target.id === 'claim') {
-      if (state.lastBonus === today()) {
-        notice('Ты уже получил сегодняшний бонус.');
-        render();
-        return;
-      }
-      state.lastBonus = today();
-      state.coins += 50;
-      save();
-      render();
-      notice('🎉 Бонус +50 монет сохранён!');
-      return;
-    }
-
-    if (e.target.id === 'share') {
-      const link = 'https://t.me/iliskhanbot?start=invite_demo';
-      if (tg?.openTelegramLink) {
-        tg.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent('Присоединяйся к ILISKhan ARENA!'));
-      } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(link).then(() => notice('Тестовая ссылка скопирована.')).catch(() => notice(link));
-      } else notice(link);
-      return;
-    }
-
-    const buy = e.target.closest('.buy');
-    if (buy) {
-      const cost = Number(buy.dataset.cost);
-      const item = buy.dataset.item || 'Предмет';
-      if (state.coins < cost) { notice('Недостаточно монет.'); return; }
-      state.coins -= cost;
-      state.purchases.push({item, cost, date: new Date().toISOString()});
-      save();
-      render();
-      notice('Покупка сохранена: ' + item + '. Списано ' + cost + ' монет.');
-      return;
-    }
-
-    const guess = e.target.closest('.guess');
-    if (guess) {
-      const win = Number(guess.dataset.n) === Math.floor(Math.random() * 3) + 1;
-      if (win) addCoins(10);
-      document.getElementById('gameResult').textContent = win
-        ? '🎉 Верно! +10 монет сохранено.'
-        : 'Не угадал. Попробуй ещё раз!';
-    }
-  });
-})();
-</script>
-</body>
-</html>
+        farms: Array.isArray(saved.farms) ? Array.from({length:5}, (_,i) => Number.isFinite(saved.farms[i]) ? Math.max(0,Math.floor(saved.farms[i])) : 0) : [0,0,0,0,0],
+        ownedWeapons: Array.isArray(saved.ownedWeapons) ? [...new Set(['training', ...saved.ownedWeapons.filter(x => ['training','pistol','rifle','sniper'].includes(x))])] : ['training'],
+        equippedWeapon: ['training','pistol','rifle','sniper'].includes(saved.equippedWeapon) ? saved.equippedWeapon : 'training',
+        ownedArmor: Array.isArray(saved.ownedArmor) ? [...new Set(['cloth', ...saved.ownedArmor.filter(x => ['cloth','vest','combat'].includes(x))])] : ['cloth'],
+        equippedArmor: ['cloth','vest','combat'].includes(
