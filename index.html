@@ -83,12 +83,12 @@
     <div class="progress"><span id="xpBar" style="width:20%"></span></div>
   </section>
   <nav class="nav">
-    <button class="active" data-page="home">⌂<br>Главная</button>
-    <button data-page="tasks">⚡<br>Задания</button>
-    <button data-page="fighter">🪖<br>Боец</button>
-    <button data-page="farms">🏭<br>Фермы</button>
-    <button data-page="rating">🏆<br>Рейтинг</button>
-    <button data-page="profile">👤<br>Профиль</button>
+    <button class="active" data-page="home" onclick="window.openArenaPage(\'home\')">⌂<br>Главная</button>
+    <button data-page="tasks" onclick="window.openArenaPage(\'tasks\')">⚡<br>Задания</button>
+    <button data-page="fighter" onclick="window.openArenaPage(\'fighter\')">🪖<br>Боец</button>
+    <button data-page="farms" onclick="window.openArenaPage(\'farms\')">🏭<br>Фермы</button>
+    <button data-page="rating" onclick="window.openArenaPage(\'rating\')">🏆<br>Рейтинг</button>
+    <button data-page="profile" onclick="window.openArenaPage(\'profile\')">👤<br>Профиль</button>
   </nav>
   <main>
     <section class="page active" id="home">
@@ -176,6 +176,15 @@
   <div class="footer">ILISKhan ARENA · LOCAL SAVE VERSION</div>
 </div>
 <script>
+// Fallback navigation for Telegram WebView: direct inline handler.
+window.openArenaPage = function(id) {
+  document.querySelectorAll('.page').forEach(function(page) {
+    page.classList.toggle('active', page.id === id);
+  });
+  document.querySelectorAll('[data-page]').forEach(function(button) {
+    button.classList.toggle('active', button.dataset.page === id);
+  });
+};
 (() => {
   const tg = window.Telegram?.WebApp;
   if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#101010'); tg.setBackgroundColor('#101010'); }
@@ -206,8 +215,4 @@
         incomeLevel: Number.isFinite(saved.incomeLevel) ? Math.max(0, Math.floor(saved.incomeLevel)) : 0,
         passiveAt: Number.isFinite(saved.passiveAt) ? saved.passiveAt : Date.now(),
         pendingIncome: Number.isFinite(saved.pendingIncome) ? Math.max(0, Math.floor(saved.pendingIncome)) : 0,
-        farms: Array.isArray(saved.farms) ? Array.from({length:5}, (_,i) => Number.isFinite(saved.farms[i]) ? Math.max(0,Math.floor(saved.farms[i])) : 0) : [0,0,0,0,0],
-        ownedWeapons: Array.isArray(saved.ownedWeapons) ? [...new Set(['training', ...saved.ownedWeapons.filter(x => ['training','pistol','rifle','sniper'].includes(x))])] : ['training'],
-        equippedWeapon: ['training','pistol','rifle','sniper'].includes(saved.equippedWeapon) ? saved.equippedWeapon : 'training',
-        ownedArmor: Array.isArray(saved.ownedArmor) ? [...new Set(['cloth', ...saved.ownedArmor.filter(x => ['cloth','vest','combat'].includes(x))])] : ['cloth'],
-        equippedArmor: ['cloth','vest','combat'].includes(
+        farms: Array.isArray(saved.farms) ? Array.from({length:5}, (_,i) => Numb
